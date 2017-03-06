@@ -22,9 +22,9 @@ class Fib {
         vector< T > fetch() {
             return vector< T > (data.begin(), data.end());
         }
-        Fib() {
-            data._PB(0LL);
-            data._PB(1LL);
+        Fib(T a, T b) {
+            data._PB(a);
+            data._PB(b);
             for(int i=data.size(); i<=ub; ++i) {
                 data._PB( *(data.end()-1)+*(data.end()-2) );
             }
@@ -32,7 +32,7 @@ class Fib {
 };
 
 int main(void) {
-    Fib<long long int> fibObj;
+    Fib<long long int> fibObj(0LL,1LL);
     for(int i=0; i<=90; ++i) cout<<"Fib_"<<i<<":\t"<<fibObj.fetch(i)<<endl;
     return 0;
 }
