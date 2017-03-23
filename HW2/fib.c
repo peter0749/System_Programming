@@ -2,27 +2,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef long long int LLINT;
-void Fib(LLINT , LLINT, size_t , LLINT *);
-void FibPrint(size_t, size_t, LLINT *);
-void WrongArg(void); 
-void showHelp(void); 
+typedef long long int LLINT; // Storage data type
+void Fib(LLINT , LLINT, size_t , LLINT *); // Function to compute Fibonacci
+void FibPrint(size_t, size_t, LLINT *); // Print Fib terms [from , to)
+void WrongArg(void);  // puts warning message
+void showHelp(void);  // puts help message
 
 int main(int argc, char **argv) {
     int i=0, Size=0;
     LLINT *data=NULL;
-    if(argc!=4) {
-        WrongArg();
+    if(argc!=4) { // There must be four arguments
+        // If the format is not match, then print warning message.
+        WrongArg(); 
+        // Program exit unusually
         exit(1);
     }
     Size=atoi(argv[3]);
-    if(Size<1) exit(2);
-    data = (LLINT*)malloc(sizeof(LLINT)*Size);
-    Fib(0LL, 1LL, Size, data);
-    FibPrint(0, Size, data);
-    for(i=0; i!=Size; ++i) data[i]=0LL;
-    free(data); data=NULL;
-    return 0;
+    if(Size<1) exit(2); // Check the number of terms
+    data = (LLINT*)malloc(sizeof(LLINT)*Size); // allocate Fibonacci mem
+    Fib(0LL, 1LL, Size, data); // Interative build fib. series
+    FibPrint(0, Size, data);   // Print fib
+    for(i=0; i!=Size; ++i) data[i]=0LL; // Clean-up memory
+    free(data); data=NULL; // Release the memory
+    return 0; // The program exit normally.
 }
 
 
