@@ -5,11 +5,16 @@
 typedef long long int LLINT;
 void Fib(LLINT , LLINT, size_t , LLINT *);
 void FibPrint(size_t, size_t, LLINT *);
+void WrongArg(void); 
+void showHelp(void); 
 
 int main(int argc, char **argv) {
     int i=0, Size=0;
     LLINT *data=NULL;
-    if(argc!=4) exit(1);
+    if(argc!=4) {
+        WrongArg();
+        exit(1);
+    }
     Size=atoi(argv[3]);
     if(Size<1) exit(2);
     data = (LLINT*)malloc(sizeof(LLINT)*Size);
@@ -34,4 +39,13 @@ void FibPrint(size_t from, size_t to, LLINT *data) {
     int i=from;
     if(from<0||from>=to) return;
     for(i=from; i!=to; ++i) printf("Fib_%d:\t%lld\n", i, data[i]);
+}
+
+void showHelp(void) {
+    const char *warnMsg="Usage: ./fib first second terms\n";
+    fputs(warnMsg,stderr);
+}
+void WrongArg(void) {
+    fputs("Please enter proper arguments...\n",stderr);
+    showHelp();
 }
