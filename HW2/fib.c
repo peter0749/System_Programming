@@ -7,12 +7,12 @@ void Fib(LLINT , LLINT, size_t , LLINT *);
 void FibPrint(size_t, size_t, LLINT *);
 
 int main(int argc, char **argv) {
-    int i=0;
-    LLINT *data=NULL, Size=0;
+    int i=0, Size=0;
+    LLINT *data=NULL;
     if(argc!=4) exit(1);
     Size=atoi(argv[3]);
     if(Size<1) exit(2);
-    data = (LLINT*)malloc(sizeof(LLINT)*atoi(argv[3]));
+    data = (LLINT*)malloc(sizeof(LLINT)*Size);
     Fib(0LL, 1LL, Size, data);
     FibPrint(0, Size, data);
     for(i=0; i!=Size; ++i) data[i]=0LL;
