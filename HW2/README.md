@@ -3,7 +3,7 @@ Date: 2017-03-23 9:20
 ID number: 404410030
 Name: 鄭光宇
 Environment: Mac OSX 10.12.3
-Simple Guide: just make
+Simple Guide: just make test
 ---
 #### 環境
 OS:
