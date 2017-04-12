@@ -2,10 +2,22 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <pwd.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+void parseHomeDir (char *str, char *src, char *buf, char *home) {
+    if (src!=NULL && *src=='~') {
+        strcat(buf, home);
+        strcat(buf, "/");
+        strcat(buf, src);
+        strcpy(str, buf);
+    } else {
+        strcpy(str, src);
+    }
+}
 
 int main(int argc, char **argv) {
     const char *helpArg="--help"; // 6 characters
@@ -15,11 +27,16 @@ int main(int argc, char **argv) {
     ssize_t inputSize=0, outputSize=0;
     const size_t BUFFER_SIZE=128*1024; // 128k
     char BUFFER[BUFFER_SIZE];
+    char sourcePath[BUFFER_SIZE], targetPath[BUFFER_SIZE];
     struct stat statbuf;
+    struct passwd *passwdEnt = getpwuid(getuid());
+    char *home = passwdEnt->pw_dir;
     if (argc !=3 || argc == 2 && strncmp(argv[1],helpArg,6)==0 ) {
         fprintf(stderr,"Usage: acp source_file target_file\n");
     }
-    fileInFd = open(argv[1], O_RDONLY);
+    parseHomeDir(sourcePath, argv[1], BUFFER, home);
+    parseHomeDir(targetPath, argv[2], BUFFER, home);
+    fileInFd = open(sourcePath, O_RDONLY);
     if (fileInFd == -1) {
         perror("Error open input file");
         exit(1);
@@ -45,7 +62,7 @@ int main(int argc, char **argv) {
 #ifndef Release
     getchar(); // for observation
 #endif
-    if (rename(tmpName, argv[2]) < 0)
+    if (rename(tmpName, targetPath) < 0)
         perror("Error when moving");
     chmod(argv[2], statbuf.st_mode);
     return (EXIT_SUCCESS);
