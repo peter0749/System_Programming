@@ -10,7 +10,7 @@
 
 void parseHomeDir (char *str, char *src, char *buf, char *home) {
     if (src!=NULL && *src=='~') {
-        strcat(buf, home);
+        strcpy(buf, home);
         strcat(buf, "/");
         strcat(buf, src);
         strcpy(str, buf);
