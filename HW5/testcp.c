@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void parseHomeDir (char *str, char *src, char *buf, char *home) {
+void parseHomeDir (char *str, const char *src, char *buf, const char *home) {
     if (src!=NULL && *src=='~') {
         strcpy(buf, home);
         strcat(buf, "/");
