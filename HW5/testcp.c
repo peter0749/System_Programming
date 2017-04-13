@@ -33,19 +33,20 @@ int main(int argc, char **argv) {
     char *home = passwdEnt->pw_dir;
     if (argc !=3 || argc == 2 && strncmp(argv[1],helpArg,6)==0 ) {
         fprintf(stderr,"Usage: acp source_file target_file\n");
+        exit(1);
     }
     parseHomeDir(sourcePath, argv[1], BUFFER, home);
     parseHomeDir(targetPath, argv[2], BUFFER, home);
     fileInFd = open(sourcePath, O_RDONLY);
     if (fileInFd == -1) {
         perror("Error open input file");
-        exit(1);
+        exit(2);
     }
     stat(argv[1], &statbuf);
     fileOutFd = open(tmpName, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR| S_IWUSR);
     if (fileOutFd == -1) {
         perror("Error open output file");
-        exit(2);
+        exit(3);
     }
     fileSize = lseek(fileInFd, 0, SEEK_END);
     lseek(fileInFd, 0, SEEK_SET);
@@ -55,7 +56,7 @@ int main(int argc, char **argv) {
         if (outputSize != inputSize) {
             perror("input_size != output_size");
             fprintf(stderr,"size: %d vs %d\n",inputSize, outputSize);
-            exit(3);
+            exit(4);
         }
     }
     close(fileInFd); close(fileOutFd);
