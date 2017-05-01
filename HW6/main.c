@@ -4,7 +4,7 @@
 #include "include/recursion.h"
 #include "include/watcher.h"
 
-#define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX + 1))
+#define BUF_LEN 8192
 #define showHelp(arg0) \
     fprintf(stderr, "usage: %s DirName [maxdepth] [-p to printout filepaths]\n", arg0);\
 fprintf(stderr, "use \"%s --help\" to print this help.\n", arg0);
@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
     int fd=0;
     int maxDepth=1;
     char printList=0;
+    printf("%d\n", BUF_LEN);
     if (argc<2) {
         fprintf(stderr, "Please enter at least 1 argument.\n");
         showHelp(argv[0]);
@@ -36,6 +37,8 @@ int main(int argc, char **argv) {
 
     // Now, implement watcher
     init_StringStack(&stack);
+    push_StringStack(&stack, dirName);
+    if (printList) printf("====== DIR STRUCTURE ======\n");
     recursion(&stack, dirName, 0, maxDepth, printList);
     sort_fileList (stack.data, stack.size);
     if (printList) {
