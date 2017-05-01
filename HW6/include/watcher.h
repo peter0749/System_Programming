@@ -43,5 +43,6 @@ void watcher_mainLoop (StringStack *files, const int BUF_LEN) {
             p+=sizeof(struct inotify_event)+event->len;
         }
     }
+    free(BUFFER); BUFFER=NULL;
 }
 #endif

@@ -10,7 +10,6 @@
 fprintf(stderr, "use \"%s --help\" to print this help.\n", arg0);
 
 int main(int argc, char **argv) {
-    const char *crrDir="./";
     char *dirName=NULL;
     StringStack stack;
     int fd=0;
@@ -31,7 +30,7 @@ int main(int argc, char **argv) {
     }
     dirName = (char*)malloc(strlen(argv[1])+5);
     if (argv[1][0]!='/') {
-        strcpy(dirName, crrDir);
+        strcat(dirName, "./");
         strcat(dirName, argv[1]);
     } else strcpy(dirName, argv[1]);
 
@@ -39,6 +38,13 @@ int main(int argc, char **argv) {
     init_StringStack(&stack);
     recursion(&stack, dirName, 0, maxDepth, printList);
     sort_fileList (stack.data, stack.size);
+    if (printList) {
+        int i=0;
+        printf("====== SORTED ======\n");
+        for (i=0; i<stack.size; ++i) printf("%s\n", stack.data[i].str);
+        printf("====== END ======\n");
+    }
+    printf("====== INOTIFY ======\n");
     watcher_mainLoop(&stack, BUF_LEN);
     des_StringStack(&stack);
     // End of watcher

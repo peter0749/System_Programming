@@ -11,6 +11,7 @@ void recursion(StringStack *stk, char *dirName, int crr_depth, const int max_dep
     struct dirent* ent=NULL;
     struct stat statBuf;
     char *pathName = NULL;
+    char is_special_dir=0;
     dir = opendir(dirName);
     if (dir==NULL) {
         perror("error");
@@ -29,9 +30,12 @@ void recursion(StringStack *stk, char *dirName, int crr_depth, const int max_dep
         strcat(pathName, ent->d_name);
         stat(pathName, &statBuf);
         //getchar();
-        push_StringStack(stk, pathName);
-        if(p) printer(pathName, crr_depth+1);
-        if(S_ISDIR(statBuf.st_mode) && strcmp(ent->d_name,".")!=0 && strcmp(ent->d_name,"..")!=0 ) {
+        is_special_dir = (strcmp(ent->d_name,".")==0 || strcmp(ent->d_name,"..")==0)?1:0;
+        if (!is_special_dir) {
+            push_StringStack(stk, pathName);
+            if(p) printer(pathName, crr_depth+1);
+        }   
+        if(S_ISDIR(statBuf.st_mode) && !is_special_dir ) {
             recursion (stk, pathName, crr_depth+1, max_depth, p);
         }
         free (pathName); pathName=NULL;
