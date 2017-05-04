@@ -1,7 +1,7 @@
-all: hw6.bin
-hw6.bin: main.c 
-	gcc main.c -o hw6.bin -Wall
+all: hw6
+hw6: main.c 
+	gcc main.c -o hw6 -Wall
 clean:
-	rm -f hw6.bin
+	rm -f hw6
 test: hw6.bin
-	./hw6.bin testdir 5 -p
+	./hw6 testdir 5 -p
