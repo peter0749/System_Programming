@@ -3,8 +3,8 @@
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
-    char *const childExeArgs[] = { "wc", NULL };
-    char *parentExeArgs[] = { "cat", NULL, NULL };
+    char *const parentExeArgs[] = { "wc", NULL };
+    char *childExeArgs[] = { "cat", NULL, NULL };
     int pipefd[2];
     if (argc<2) {
         fprintf(stderr, "Please enter filepath!\n");
@@ -14,21 +14,19 @@ int main(int argc, char *argv[]) {
     pipe(pipefd);
 
     pid_t pid = fork();
-    if(pid != 0) {
+    if(pid != 0) { // parent
         close(pipefd[1]);
-        dup2(pipefd[0], 0);
+        dup2(pipefd[0], 0); // -> stdin
         close(pipefd[0]);
         printf("%4cline%4cword%4csize\n", ' ', ' ', ' ');
-        execv("/usr/bin/wc", childExeArgs);
-        //execlp("wc", "wc", "-l", NULL);
+        execv("/usr/bin/wc", parentExeArgs);
     }
-    else {
+    else { // child ( fork() == 0)
         close(pipefd[0]);
-        dup2(pipefd[1], 1);
+        dup2(pipefd[1], 1); // -> stdout
         close(pipefd[1]);
-        parentExeArgs[1] = argv[1]; // copy filepath pointer
-        execv("/bin/cat", parentExeArgs);
-        //execlp("ls", "ls", NULL);
+        childExeArgs[1] = argv[1]; // copy filepath pointer
+        execv("/bin/cat", childExeArgs);
     } 
     return EXIT_SUCCESS;
 }
