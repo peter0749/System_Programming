@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
         close(pipefd[1]);
         dup2(pipefd[0], 0);
         close(pipefd[0]);
-        printf("%4cline%5ccol%4csize\n", ' ', ' ', ' ');
+        printf("%4cline%4cword%4csize\n", ' ', ' ', ' ');
         execv("/usr/bin/wc", childExeArgs);
         //execlp("wc", "wc", "-l", NULL);
     }
