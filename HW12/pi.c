@@ -79,12 +79,14 @@ int main(int argc, char *argv[]) {
     // wait all threads terminate
     for (i=0; i<threadN; ++i) {
         pthread_join(threads[i], &return_status); // wait thread i terminate
+        assert(return_status!=NULL);
         in += *((int*)return_status);
-        if (return_status!=NULL) free(return_status); // destroy the malloced result
+        free(return_status); // destroy the malloced result
         return_status = NULL;
     }
     gettimeofday(&et, &etz);
     free(threads);
+    free(args);
     printf("Estimated PI: %lf\n", (double)in/(double)total*4.0);
     printf("Elapsed time: %lf seconds\n", (double)(et.tv_sec*1e6+et.tv_usec-st.tv_sec*1e6-st.tv_usec)/(double)1e6);
     return EXIT_SUCCESS;
