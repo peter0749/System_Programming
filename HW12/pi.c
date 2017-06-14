@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     gettimeofday(&et, &etz);
     free(threads);
     free(args);
-    printf("Estimated PI: %lf\n", (double)in/(double)total*4.0);
+    printf("Estimated PI: %.8lf\n", (double)in/(double)total*4.0);
     printf("Elapsed time: %lf seconds\n", (double)(et.tv_sec*1e6+et.tv_usec-st.tv_sec*1e6-st.tv_usec)/(double)1e6);
     return EXIT_SUCCESS;
 }
