@@ -9,7 +9,7 @@
 
 typedef struct {
     int tid;
-    int chunk_size;
+    unsigned long long int chunk_size;
 }_THREAD_ARGS;
 
 double GEN_RAND(unsigned int *seed) {
@@ -18,19 +18,21 @@ double GEN_RAND(unsigned int *seed) {
 
 void *PI_KERNEL_FUNC( void* __ARGS) {
     _THREAD_ARGS *p = (_THREAD_ARGS*)__ARGS;
-    int chunk_size = p->chunk_size;
+    unsigned long long int chunk_size = p->chunk_size;
     unsigned int seed = 0xDEADBEEF; 
-    unsigned int i=0, local_total=0; // local vars
-    unsigned int *local_in = NULL;
-    local_in = (unsigned int*)malloc(sizeof(unsigned int));
-    double x=0.0,y=0.0;
+    const unsigned int MOD = 1000000007; // constant 1e9+7
+    const unsigned int BASE = 37; // constant 1e9+7
+    unsigned long long int i=0, local_total=0; // local vars
+    unsigned long long int *local_in = NULL;
+    local_in = (unsigned long long int*)malloc(sizeof(unsigned long long int));
+    long double x=0.0L,y=0.0L;
     local_total = chunk_size;
-    fprintf(stderr,"Hi! worker %d, there are %d numbers to compute.\n", p->tid, local_total);
-    seed = time(NULL);
+    fprintf(stderr,"Hi! worker %d, there are %llu numbers to compute.\n", p->tid, local_total);
+    seed = ((unsigned int)clock()^seed+BASE)%MOD;
     for (i=0; i<local_total; ++i) {
         x = GEN_RAND(&seed);
         y = GEN_RAND(&seed);
-        *local_in += (x*x+y*y < 1.0)?1:0;
+        *local_in += (x*x+y*y <= 1.0L)?1:0;
     }
     fprintf(stderr,"Bye! worker %d, the result is %lf.\n", p->tid, (double)(*local_in)/(double)local_total*4.0);
     pthread_exit((void*)local_in);
@@ -41,22 +43,21 @@ int main(int argc, char *argv[]) {
         fprintf(stderr,"Please enter #loop and #thread!\n");
         exit(EXIT_FAILURE);
     }
-    int i=0, j=0, total=0, in=0, chunk_size=0;
+    unsigned long long int i=0, j=0, total=0, in=0, chunk_size=0;
     void *return_status=NULL;
-    int loopN = atoi(argv[1]);
+    unsigned long long int loopN = (unsigned long long int)atoll(argv[1]);
     int threadN = atoi(argv[2]);
     _THREAD_ARGS *args=NULL;
     struct timeval st, et;
     struct timezone stz, etz;
-    if (loopN<1||threadN<1) {
+    if (loopN<1L||threadN<1) {
         fprintf(stderr,"Wrong arguments! Only if #loop>=1 and #thread>=1 is valid.\n");
         exit(EXIT_FAILURE);
     }
-    unsigned int seed = time(NULL);
-    chunk_size = (loopN+threadN-1)/threadN; // chunk*threadN >= loopN
-    total = chunk_size*threadN; // total area
-    in    = 0;
-    printf("chunk_size: %d\nthreadN: %d\n", chunk_size, threadN);
+    chunk_size = (loopN+(unsigned long long int)threadN-1L)/(unsigned long long int)threadN; // chunk*threadN >= loopN
+    total = chunk_size*(unsigned long long int)threadN; // total area
+    in    = 0L;
+    printf("chunk_size: %llu\nthreadN: %d\ntotal: %llu\n", chunk_size, threadN, total);
     pthread_t *threads = NULL;
 
     threads = (pthread_t*)malloc(sizeof(pthread_t)*threadN);
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
     gettimeofday(&et, &etz);
     free(threads);
     free(args);
-    printf("Estimated PI: %.8lf\n", (double)in/(double)total*4.0);
+    printf("Estimated PI: %.8LF\n", (long double)in/(long double)total*4.0);
     printf("Elapsed time: %lf seconds\n", (double)(et.tv_sec*1e6+et.tv_usec-st.tv_sec*1e6-st.tv_usec)/(double)1e6);
     return EXIT_SUCCESS;
 }
