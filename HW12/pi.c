@@ -7,30 +7,66 @@
 #include <pthread.h>
 #include <assert.h>
 
+/* struct of seed of xorshf96*/
+typedef struct {
+	//unsigned long x=123456789, y=362436069, z=521288629;
+	unsigned long x, y, z;
+}RAND_State;
+
 typedef struct {
     int tid;
     unsigned long long int chunk_size;
+    RAND_State *sp;
 }_THREAD_ARGS;
-
 
 // NO MUTEX LOCK IS NEEDED
 
-double GEN_RAND(unsigned int *seed) {
-    return (double)rand_r(seed)/(double)RAND_MAX; // generate random float [0,1]
+// xorshf96 Algorithm, from github:
+// https://github.com/raylee/xorshf96/blob/master/xorshf96.c
+// with CC0-1.0 License
+unsigned long xorshf96(RAND_State *sp) {
+	unsigned long x=sp->x, y=sp->y, z=sp->z;
+	unsigned long t;
+
+	x ^= x << 16;
+	x ^= x >> 5;
+	x ^= x << 1;
+
+	t = x;
+	x = y;
+	y = z;
+
+	z = t ^ x ^ y;
+    sp->x = x;
+    sp->y = y;
+    sp->z = z; // <---- return value
+    return z;
+}
+
+/* Initialize random seed*/
+void xorshf96_init(RAND_State *sp, unsigned long seed ) {
+    sp->x = seed;
+    sp->y = 362436069;
+    sp->z = 521288629;
+    xorshf96(sp);
+}
+
+/*scale to [0,1) uniform*/
+double GEN_RAND(RAND_State *seed) {
+    return (double)(xorshf96(seed)%RAND_MAX)/(double)RAND_MAX; // generate random float [0,1]
 }
 
 void *PI_KERNEL_FUNC( void* __ARGS) {
     _THREAD_ARGS *p = (_THREAD_ARGS*)__ARGS;
     unsigned long long int chunk_size = p->chunk_size;
-    unsigned int seed = clock()^p->tid;  // no clock() or time() is needed
     unsigned long long int i=0, local_total=0; // local vars
     unsigned long long int local_in = 0; 
     long double x=0.0L,y=0.0L;
     local_total = chunk_size;
     fprintf(stderr,"Hi! worker %d, there are %llu numbers to compute.\n", p->tid, local_total);
     for (i=0; i<local_total; ++i) {
-        x = GEN_RAND(&seed);
-        y = GEN_RAND(&seed);
+        x = GEN_RAND(p->sp);
+        y = GEN_RAND(p->sp);
         local_in += (x*x+y*y <= 1.0L)?1:0; // use == ?
     }
     fprintf(stderr,"Bye! worker %d, the result is %lf.\n", p->tid, (double)(local_in)/(double)local_total*4.0);
@@ -70,6 +106,10 @@ int main(int argc, char *argv[]) {
     for (i=0; i<threadN; ++i) {
         args[i].tid=i;
         args[i].chunk_size=chunk_size;
+        args[i].sp = NULL;
+        args[i].sp = (RAND_State*)malloc(sizeof(RAND_State));
+        assert(args[i].sp!=NULL);
+        xorshf96_init(args[i].sp, clock());
         int re = pthread_create(threads+i, NULL, PI_KERNEL_FUNC, (void*)(args+i));
         if (re) {
             fprintf(stderr,"Failed to create new thread!\n");
@@ -80,6 +120,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i<threadN; ++i) {
         pthread_join(threads[i], NULL); // wait thread i terminate
         in += args[i].chunk_size;
+        free(args[i].sp); // remember to release memory
     }
     gettimeofday(&et, &etz);
     free(threads);
