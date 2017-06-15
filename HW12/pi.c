@@ -12,6 +12,9 @@ typedef struct {
     unsigned long long int chunk_size;
 }_THREAD_ARGS;
 
+
+// NO MUTEX LOCK IS NEEDED
+
 double GEN_RAND(unsigned int *seed) {
     return (double)rand_r(seed)/(double)RAND_MAX; // generate random float [0,1]
 }
@@ -19,23 +22,20 @@ double GEN_RAND(unsigned int *seed) {
 void *PI_KERNEL_FUNC( void* __ARGS) {
     _THREAD_ARGS *p = (_THREAD_ARGS*)__ARGS;
     unsigned long long int chunk_size = p->chunk_size;
-    unsigned int seed = 0xDEADBEEF; 
-    const unsigned int MOD = 1000000007; // constant 1e9+7
-    const unsigned int BASE = 37; // constant 1e9+7
+    unsigned int seed = 0xDEADBEEF+p->tid;  // no clock() or time() is needed
     unsigned long long int i=0, local_total=0; // local vars
-    unsigned long long int *local_in = NULL;
-    local_in = (unsigned long long int*)malloc(sizeof(unsigned long long int));
+    unsigned long long int local_in = 0; 
     long double x=0.0L,y=0.0L;
     local_total = chunk_size;
     fprintf(stderr,"Hi! worker %d, there are %llu numbers to compute.\n", p->tid, local_total);
-    seed = ((unsigned int)clock()^seed+BASE)%MOD;
     for (i=0; i<local_total; ++i) {
         x = GEN_RAND(&seed);
         y = GEN_RAND(&seed);
-        *local_in += (x*x+y*y <= 1.0L)?1:0;
+        local_in += (x*x+y*y <= 1.0L)?1:0; // use == ?
     }
-    fprintf(stderr,"Bye! worker %d, the result is %lf.\n", p->tid, (double)(*local_in)/(double)local_total*4.0);
-    pthread_exit((void*)local_in);
+    fprintf(stderr,"Bye! worker %d, the result is %lf.\n", p->tid, (double)(local_in)/(double)local_total*4.0);
+    p->chunk_size = local_in; // return this result
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
@@ -44,7 +44,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     unsigned long long int i=0, j=0, total=0, in=0, chunk_size=0;
-    void *return_status=NULL;
     unsigned long long int loopN = (unsigned long long int)atoll(argv[1]);
     int threadN = atoi(argv[2]);
     _THREAD_ARGS *args=NULL;
@@ -79,11 +78,8 @@ int main(int argc, char *argv[]) {
     }
     // wait all threads terminate
     for (i=0; i<threadN; ++i) {
-        pthread_join(threads[i], &return_status); // wait thread i terminate
-        assert(return_status!=NULL);
-        in += *((int*)return_status);
-        free(return_status); // destroy the malloced result
-        return_status = NULL;
+        pthread_join(threads[i], NULL); // wait thread i terminate
+        in += args[i].chunk_size;
     }
     gettimeofday(&et, &etz);
     free(threads);
