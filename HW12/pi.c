@@ -16,7 +16,7 @@ typedef struct {
 typedef struct {
     int tid;
     unsigned long long int chunk_size;
-    RAND_State *sp;
+    RAND_State rs;
 }_THREAD_ARGS;
 
 // NO MUTEX LOCK IS NEEDED
@@ -65,8 +65,8 @@ void *PI_KERNEL_FUNC( void* __ARGS) {
     local_total = chunk_size;
     fprintf(stderr,"Hi! worker %d, there are %llu numbers to compute.\n", p->tid, local_total);
     for (i=0; i<local_total; ++i) {
-        x = GEN_RAND(p->sp);
-        y = GEN_RAND(p->sp);
+        x = GEN_RAND(&p->rs);
+        y = GEN_RAND(&p->rs);
         local_in += (x*x+y*y <= 1.0L)?1:0; // use == ?
     }
     fprintf(stderr,"Bye! worker %d, the result is %lf.\n", p->tid, (double)(local_in)/(double)local_total*4.0);
@@ -106,10 +106,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i<threadN; ++i) {
         args[i].tid=i;
         args[i].chunk_size=chunk_size;
-        args[i].sp = NULL;
-        args[i].sp = (RAND_State*)malloc(sizeof(RAND_State));
-        assert(args[i].sp!=NULL);
-        xorshf96_init(args[i].sp, clock());
+        xorshf96_init(&args[i].rs, clock());
         int re = pthread_create(threads+i, NULL, PI_KERNEL_FUNC, (void*)(args+i));
         if (re) {
             fprintf(stderr,"Failed to create new thread!\n");
@@ -120,7 +117,6 @@ int main(int argc, char *argv[]) {
     for (i=0; i<threadN; ++i) {
         pthread_join(threads[i], NULL); // wait thread i terminate
         in += args[i].chunk_size;
-        free(args[i].sp); // remember to release memory
     }
     gettimeofday(&et, &etz);
     free(threads);
