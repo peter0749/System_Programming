@@ -1,5 +1,5 @@
-chunk_size: 800000000
+chunk_size: 2147483648
 threadN: 1
-total: 800000000
-Estimated PI: 3.14158330
-Elapsed time: 9.988236 seconds
+total: 2147483648
+Estimated PI: 3.14158726
+Elapsed time: 30.181492 seconds
