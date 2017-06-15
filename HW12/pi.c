@@ -22,7 +22,7 @@ double GEN_RAND(unsigned int *seed) {
 void *PI_KERNEL_FUNC( void* __ARGS) {
     _THREAD_ARGS *p = (_THREAD_ARGS*)__ARGS;
     unsigned long long int chunk_size = p->chunk_size;
-    unsigned int seed = 0xDEADBEEF+p->tid;  // no clock() or time() is needed
+    unsigned int seed = clock()^p->tid;  // no clock() or time() is needed
     unsigned long long int i=0, local_total=0; // local vars
     unsigned long long int local_in = 0; 
     long double x=0.0L,y=0.0L;
