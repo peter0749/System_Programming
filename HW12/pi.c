@@ -7,6 +7,9 @@
 #include <pthread.h>
 #include <assert.h>
 
+#undef RAND_MAX
+#define RAND_MAX 2147483647uL
+
 /* struct of seed of xorshf96*/
 typedef struct {
 	//unsigned long x=123456789, y=362436069, z=521288629;
@@ -51,27 +54,28 @@ void xorshf96_init(RAND_State *sp, unsigned long seed ) {
     xorshf96(sp);
 }
 
-/*scale to [0,1) uniform*/
-double GEN_RAND(RAND_State *seed) {
-    return (double)(xorshf96(seed)%RAND_MAX)/(double)RAND_MAX; // generate random float [0,1]
-}
-
 void *PI_KERNEL_FUNC( void* __ARGS) {
+/*scale to [0,1) uniform*/
+#define GEN_RAND(seed) \
+    ( xorshf96( ( seed ) )%RAND_MAX )
+#define MAX_R2 ( (RAND_MAX)*(RAND_MAX) )
     _THREAD_ARGS *p = (_THREAD_ARGS*)__ARGS;
     unsigned long long int chunk_size = p->chunk_size;
     unsigned long long int i=0, local_total=0; // local vars
     unsigned long long int local_in = 0; 
-    long double x=0.0L,y=0.0L;
+    unsigned long x=0,y=0;
     local_total = chunk_size;
     fprintf(stderr,"Hi! worker %d, there are %llu numbers to compute.\n", p->tid, local_total);
     for (i=0; i<local_total; ++i) {
         x = GEN_RAND(&p->rs);
         y = GEN_RAND(&p->rs);
-        local_in += (x*x+y*y <= 1.0L)?1:0; // use == ?
+        local_in += ( x*x+y*y < MAX_R2 )?1:0; // use == ?
     }
     fprintf(stderr,"Bye! worker %d, the result is %lf.\n", p->tid, (double)(local_in)/(double)local_total*4.0);
     p->chunk_size = local_in; // return this result
     pthread_exit(NULL);
+#undef MAX_R2
+#undef GEN_RAND
 }
 
 int main(int argc, char *argv[]) {
