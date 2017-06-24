@@ -1,0 +1,29 @@
+1.1 沒有特別設計同步機制，所有答案在 join 時統計。
+	產生隨機點的方式：用 rand_r 產生亂數，之後 scale 到 x:[0,8]; y:[0,64]
+	的座標範圍，隨機撒點在平面上。
+1.2 沒有特別的同步功能，我另外開一個用來讀取資料的 thread ，若攔截到 SIGTSTP (Ctrl+Z) ，
+	就另外計算、輸出目前得到在函數下面積的總點數，還有總共算到第幾個百分位數。
+	因為只是讀取變數，所以沒有設定 lock 。
+
+	輸出格式：
+	函數下面積點數 / 總點數, 跑到第幾個百分位/100
+
+	註：不要按太快 Ctrl+Z ，不要玩壞他 OuO，請在出現 'Listener is ready' 時，才輸入 Ctrl+Z
+
+
+編譯 make
+執行 ./yx2 loop thread_n
+
+記得把 thread_n 放大一點(e.g. 8)
+才可以正確觀察加速情形，因為其中一個 thread 算完了，後面的 thread 可以直接接上，
+就不會有幾個 core 在閒置。
+
+可以使用 makefile 中的 :bench target 來直接測試，
+用法： make bench
+
+make bench 內容：
+echo "For 1 thread:"
+./yx2 200000000 1
+echo "For 8 thread:"
+./yx2 200000000 8
+

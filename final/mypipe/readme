@@ -1,0 +1,7 @@
+編譯 make
+執行 ./mypipe exec1 arg1 exec2 arg2
+其中 exec1, exec2 == 執行檔名稱
+     arg1 , arg2  == exec1, exec2 個別的參數
+
+執行 ./mypipe exec1 arg1 exec2 arg2 等同於
+在 bash 下： exec1 arg1 | exec2 arg2
